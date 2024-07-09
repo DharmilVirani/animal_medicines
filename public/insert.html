@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="insert.css" />
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Medicine Insert</title>
+    </head>
+    <body>
+        <div class="insert-main-container">
+            <div class="insert-container">
+                <form action="" id="drugForm">
+                    <input type="text" placeholder="Name" id="name" />
+                    <input type="text" placeholder="Species" id="species" />
+                    <input type="text" placeholder="Dose mg/kg" id="dose" />
+                    <input type="text" placeholder="Frequency" id="frequency" />
+                    <input type="text" placeholder="Route" id="route" />
+                    <input type="text" placeholder="Remarks" id="remarks" />
+                    <div class="form-btn-container">
+                        <button type="button" class="btn secondary" onclick="location.href='../index.html'">
+                            Back
+                        </button>
+                        <button type="submit" class="btn primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('drugForm').addEventListener('submit', function (event) {
+                let valid = true
+                const inputs = document.querySelectorAll('#drugForm input')
+                inputs.forEach((input) => {
+                    if (input.value.trim() === '') {
+                        valid = false
+                    }
+                })
+
+                if (!valid) {
+                    event.preventDefault()
+                    alert('Please fill out all the fields.')
+                } else {
+                    alert('Data Inserted Successfully!!!')
+                }
+            })
+        </script>
+    </body>
+</html>
