@@ -28,8 +28,6 @@ db.serialize(() => {
             name TEXT NOT NULL,
             species TEXT NOT NULL,
             dose TEXT NOT NULL,
-            frequency TEXT NOT NULL,
-            route TEXT NOT NULL,
             remarks TEXT NOT NULL
         )
     `,
@@ -50,7 +48,7 @@ app.use(express.json())
 // Route to insert a new drug entry
 app.post('/medicine', (req, res) => {
     console.log('Received request:', req.body)
-    const { name, species, dose, frequency, route, remarks } = req.body
+    const { name, species, dose, remarks } = req.body
 
     // Fetch the last inserted ID
     db.get('SELECT id FROM drugs ORDER BY id DESC LIMIT 1', (err, row) => {
@@ -63,10 +61,10 @@ app.post('/medicine', (req, res) => {
 
         db.run(
             `
-            INSERT INTO drugs (id, name, species, dose, frequency, route, remarks) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO drugs (id, name, species, dose, remarks) 
+            VALUES (?, ?, ?, ?, ?)
         `,
-            [newId, name, species, dose, frequency, route, remarks],
+            [newId, name, species, dose, remarks],
             function (err) {
                 if (err) {
                     console.error('Error inserting drug entry:', err)
