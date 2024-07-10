@@ -19,8 +19,8 @@ body {
 }
 
 .btn {
-    padding: 5vh 5vw;
-    margin-top: 10vh;
+    padding: 25px 50px;
+    margin-bottom: 30px;
     border-radius: 1rem;
     border: none;
     background-color: green;
