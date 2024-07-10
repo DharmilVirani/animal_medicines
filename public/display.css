@@ -2,6 +2,7 @@
     margin: 0;
     padding: 0;
     text-decoration: none;
+    font-size: 25px;
 }
 
 body {
@@ -13,13 +14,49 @@ body {
 
 .display-main-container {
     display: grid;
-    grid-template-columns: 8vw 8vw 8vw 8vw 8vw 22vw;
-    gap: 5vw;
-    margin-top: 10vh;
-    height: 3vh;
+    grid-template-columns: 50px 120px 120px 120px 120px 120px 350px;
+    column-gap: 25px;
     text-align: left;
 }
 
+.label-container {
+    position: fixed;
+    grid-template-columns: 50px 120px 120px 120px 120px 120px 250px 120px;
+    background-color: white;
+    align-items: center;
+    padding-top: 10px;
+}
+
+.data-container {
+    margin-top: 100px;
+}
+
 .label {
+    font-weight: 600;
+    position: sticky;
+}
+
+.btn {
+    padding: 15px;
     font-size: 20px;
+    border-radius: 1rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn.primary {
+    background-color: green;
+    color: white;
+}
+
+.btn:hover {
+    box-shadow: 0px 0px 10px 5px rgb(173, 173, 173);
+}
+
+.data {
+    padding-bottom: 20px;
+}
+
+.remarks {
+    overflow: hidden;
 }

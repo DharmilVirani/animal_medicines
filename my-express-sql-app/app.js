@@ -122,10 +122,10 @@ app.delete('/medicine/:id', (req, res) => {
 // Route to get all drug entries
 app.get('/medicine', (req, res) => {
     const { name, species } = req.query
-    const query = `SELECT * FROM drugs WHERE name = ? AND species = ? ORDER BY id`
+    const query = 'SELECT * FROM drugs WHERE name = ? AND species = ? ORDER by id'
     db.all(query, [name, species], (err, rows) => {
         if (err) {
-            console.error('Error retrieving drug entries:', err)
+            console.error('Error retreiveing drug entries: ', err)
             res.status(500).send('Error retrieving drug entries')
         } else {
             res.status(200).json(rows)

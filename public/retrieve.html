@@ -20,6 +20,8 @@
 
         <script>
             document.getElementById('submit').addEventListener('click', function (event) {
+                event.preventDefault() // Prevent the default form submission
+
                 let valid = true
                 const inputs = document.querySelectorAll('input')
                 inputs.forEach((input) => {
@@ -29,11 +31,31 @@
                 })
 
                 if (!valid) {
-                    event.preventDefault()
                     alert('Please fill out all the fields.')
-                } else {
-                    window.location.href = 'display.html'
+                    return
                 }
+
+                const name = document.getElementById('name').value.trim()
+                const species = document.getElementById('species').value.trim()
+
+                fetch(`http://localhost:3000/medicine?name=${name}&species=${species}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.length === 0) {
+                            alert('No data found.')
+                            return
+                        }
+
+                        const queryParams = new URLSearchParams()
+                        queryParams.append('name', name)
+                        queryParams.append('species', species)
+
+                        window.location.href = `display.html?${queryParams.toString()}`
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error)
+                        alert('Error retrieving data')
+                    })
             })
         </script>
     </body>

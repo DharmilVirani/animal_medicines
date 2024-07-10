@@ -7,19 +7,47 @@
         <title>Medicine Display</title>
     </head>
     <body>
-        <div class="display-main-container">
-            <div class="label">Name</div>
-            <div class="label">Species</div>
-            <div class="label">Dose mg/kg</div>
-            <div class="label">Frequency</div>
-            <div class="label">Route</div>
-            <div class="label">Remarks</div>
-            <div class="data">Acemannan</div>
-            <div class="data">Feline</div>
-            <div class="data">2.0 mg T</div>
-            <div class="data">q1w</div>
-            <div class="data">IL</div>
-            <div class="data">For 6 weeks</div>
+        <div class="container">
+            <div class="display-main-container label-container">
+                <div class="label">Id</div>
+                <div class="label">Name</div>
+                <div class="label">Species</div>
+                <div class="label">Dose mg/kg</div>
+                <div class="label">Frequency</div>
+                <div class="label">Route</div>
+                <div class="label">Remarks</div>
+                <button class="btn primary" onclick="location.href='../index.html'">Home</button>
+            </div>
+            <div class="display-main-container data-container"></div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const queryParams = new URLSearchParams(window.location.search)
+                const name = queryParams.get('name')
+                const species = queryParams.get('species')
+
+                fetch(`http://localhost:3000/medicine?name=${name}&species=${species}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const container = document.querySelector('.data-container')
+                        data.forEach((entry) => {
+                            container.innerHTML += `
+                                <div class="data">${entry.id}</div>
+                                <div class="data">${entry.name}</div>
+                                <div class="data">${entry.species}</div>
+                                <div class="data">${entry.dose}</div>
+                                <div class="data">${entry.frequency}</div>
+                                <div class="data">${entry.route}</div>
+                                <div class="data remarks">${entry.remarks}</div>
+                            `
+                        })
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error)
+                        alert('Error retrieving data')
+                    })
+            })
+        </script>
     </body>
 </html>

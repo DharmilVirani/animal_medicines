@@ -27,7 +27,8 @@ h1 {
     margin-bottom: 25px;
 }
 
-input {
+input,
+textarea {
     border: none;
     border-bottom: 1px solid black;
     padding: 10px 0px;
@@ -39,7 +40,15 @@ input:focus {
     outline: none;
 }
 
+textarea:focus {
+    outline: none;
+}
+
 input::placeholder {
+    opacity: 0.8;
+}
+
+textarea::placeholder {
     opacity: 0.8;
 }
 
