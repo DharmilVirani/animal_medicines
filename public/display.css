@@ -43,6 +43,7 @@ body {
 }
 
 .btn {
+    max-width: 200px;
     padding: 15px;
     font-size: 20px;
     border-radius: 1rem;
@@ -60,9 +61,20 @@ body {
 }
 
 .data {
-    padding-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .remarks {
+    width: 300px;
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-all;
+}
+
+.remarks:hover {
+    overflow: visible;
+    display: block;
 }
