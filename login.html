@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="./public/app.css" />
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login</title>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="login-btn-container">
+                <button class="btn primary">Login</button>
+                <button class="btn secondary">Register</button>
+            </div>
+            <div>
+                <input type="text" placeholder="Username" />
+                <input type="text" placeholder="Password" />
+            </div>
+            <button class="btn primary login-submit">Submit</button>
+        </div>
+
+        <script>
+            const heading = document.getElementsByClassName('heading')
+
+            document.addEventListener('mouseover', () => {
+                heading.style.backgroundColor = 'green'
+                heading.style.color = 'white'
+            })
+        </script>
+    </body>
+</html>
