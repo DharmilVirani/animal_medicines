@@ -9,23 +9,31 @@
     <body>
         <div class="login-container">
             <div class="login-btn-container">
-                <button class="btn primary">Login</button>
-                <button class="btn secondary">Register</button>
+                <button class="btn primary login-btn">Login</button>
+                <button class="btn secondary register-btn">Register</button>
             </div>
             <div>
                 <input type="text" placeholder="Username" />
                 <input type="text" placeholder="Password" />
             </div>
             <button class="btn primary login-submit">Submit</button>
+
+            <script>
+                const registerBtn = document.getElementsByClassName('register-btn')[0]
+                const loginBtn = document.getElementsByClassName('login-btn')[0]
+                registerBtn.addEventListener('click', () => {
+                    registerBtn.classList.add('primary')
+                    registerBtn.classList.remove('secondary')
+                    loginBtn.classList.remove('primary')
+                    loginBtn.classList.add('secondary')
+                })
+                loginBtn.addEventListener('click', () => {
+                    loginBtn.classList.add('primary')
+                    loginBtn.classList.remove('secondary')
+                    registerBtn.classList.remove('primary')
+                    registerBtn.classList.add('secondary')
+                })
+            </script>
         </div>
-
-        <script>
-            const heading = document.getElementsByClassName('heading')
-
-            document.addEventListener('mouseover', () => {
-                heading.style.backgroundColor = 'green'
-                heading.style.color = 'white'
-            })
-        </script>
     </body>
 </html>
