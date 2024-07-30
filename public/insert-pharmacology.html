@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Upload Word File</title>
+        <link rel="stylesheet" href="css/app.css" />
+    </head>
+    <body>
+        <div class="ip-main-container body">
+            <div class="upload-container">
+                <input type="file" name="file" class="fileinput" tabindex="1" accept=".doc,.docx" required />
+                <div class="insert-btn-container">
+                    <button class="btn secondary insert-home" onclick="location.href='../index.html'" tabindex="3">
+                        Back
+                    </button>
+                    <button class="btn primary file-submit" tabindex="2">Upload Word</button>
+                </div>
+                <button
+                    type="button"
+                    class="btn close"
+                    onclick="location.href='./delete-pharmacology.html'"
+                    tabindex="4"
+                >
+                    Delete Pharmacology Data
+                </button>
+            </div>
+        </div>
+
+        <script>
+            document.querySelector('.file-submit').addEventListener('click', function () {
+                const fileInput = document.querySelector('.fileinput')
+                if (fileInput.files.length === 0) {
+                    alert('Please select a file.')
+                    return
+                }
+
+                const allowedExtensions = /(\.doc|\.docx)$/i
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i]
+                    if (!allowedExtensions.exec(file.name)) {
+                        alert('Invalid file type. Please select Word documents only.')
+                        fileInput.value = ''
+                        return
+                    }
+                }
+
+                const formData = new FormData()
+                formData.append('file', fileInput.files[0])
+
+                fetch('http://localhost:3000/upload-word', {
+                    method: 'POST',
+                    body: formData,
+                })
+                    .then((response) => response.text())
+                    .then((data) => {
+                        alert(data)
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error)
+                        alert('Error uploading file')
+                    })
+            })
+        </script>
+    </body>
+</html>

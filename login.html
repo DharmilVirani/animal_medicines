@@ -1,39 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <link rel="stylesheet" href="./public/app.css" />
+        <link rel="stylesheet" href="./public/css/app.css" />
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Login</title>
     </head>
-    <body>
+    <body class="body">
         <div class="login-container">
-            <div class="login-btn-container">
-                <button class="btn primary login-btn">Login</button>
-                <button class="btn secondary register-btn">Register</button>
-            </div>
+            <h2>Admin Login</h2>
             <div>
-                <input type="text" placeholder="Username" />
-                <input type="text" placeholder="Password" />
+                <input type="text" placeholder="Username" id="username" tabindex="1" />
+                <input type="password" placeholder="Password" id="password" tabindex="2" />
             </div>
-            <button class="btn primary login-submit">Submit</button>
-
-            <script>
-                const registerBtn = document.getElementsByClassName('register-btn')[0]
-                const loginBtn = document.getElementsByClassName('login-btn')[0]
-                registerBtn.addEventListener('click', () => {
-                    registerBtn.classList.add('primary')
-                    registerBtn.classList.remove('secondary')
-                    loginBtn.classList.remove('primary')
-                    loginBtn.classList.add('secondary')
-                })
-                loginBtn.addEventListener('click', () => {
-                    loginBtn.classList.add('primary')
-                    loginBtn.classList.remove('secondary')
-                    registerBtn.classList.remove('primary')
-                    registerBtn.classList.add('secondary')
-                })
-            </script>
+            <div class="login-btn-container">
+                <button class="btn secondary" onclick="location.href='../index.html'" tabindex="4">Back</button>
+                <button class="btn primary login-submit" tabindex="3">Submit</button>
+            </div>
         </div>
+
+        <script>
+            const submitBtn = document.getElementsByClassName('login-submit')[0]
+
+            submitBtn.addEventListener('click', function (event) {
+                event.preventDefault()
+
+                let valid = true
+                const inputs = document.querySelectorAll('input')
+                inputs.forEach((input) => {
+                    if (input.value.trim() === '') {
+                        valid = false
+                    }
+                })
+
+                if (!valid) {
+                    alert('Please fill out all the fields.')
+                    return
+                }
+
+                const username = document.getElementById('username').value
+                const password = document.getElementById('password').value
+
+                fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.token) {
+                            localStorage.setItem('token', data.token)
+                            alert('Login Successful.')
+                            window.location.href = 'index.html'
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error)
+                        alert('Incorrect Credentials.')
+                    })
+            })
+        </script>
     </body>
 </html>

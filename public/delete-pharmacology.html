@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="css/app.css" />
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Delete Pharmacology</title>
+    </head>
+    <body>
+        <div class="insert-main-container body">
+            <div class="insert-container">
+                <input type="text" placeholder="Name of Medicine" id="name" class="input" tabindex="1" />
+                <div class="autocomplete-suggestions" id="autocomplete-suggestions"></div>
+                <div class="form-btn-container">
+                    <button class="btn secondary" onclick="location.href='insert-pharmacology.html'" tabindex="3">
+                        Back
+                    </button>
+                    <button class="btn primary submit delete-word" tabindex="2">Delete Word</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/autocomplete.js"></script>
+    </body>
+</html>

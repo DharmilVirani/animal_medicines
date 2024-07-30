@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="css/app.css" />
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>View Pharmacology</title>
+    </head>
+    <body>
+        <div class="insert-main-container body">
+            <div class="insert-container">
+                <input type="text" placeholder="Name of Medicine" id="name" class="input" tabindex="1" />
+                <div class="autocomplete-suggestions" id="autocomplete-suggestions"></div>
+                <div class="form-btn-container">
+                    <button class="btn secondary" onclick="location.href='../index.html'" tabindex="3">Back</button>
+                    <button class="btn primary submit" tabindex="2">Download Word</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/autocomplete.js"></script>
+        <script>
+            const input = document.getElementById('name')
+
+            document.querySelector('.submit').addEventListener('click', (event) => {
+                event.preventDefault()
+
+                const fileName = input.value.trim()
+                if (!fileName) {
+                    alert('Please enter a file name.')
+                    return
+                }
+
+                fetch(`http://localhost:3000/pharmacology/${fileName}`)
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok')
+                        }
+                        return response.blob()
+                    })
+                    .then((blob) => {
+                        const url = window.URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `${fileName}.docx`
+                        document.body.appendChild(a)
+                        a.click()
+                        a.remove()
+                        input.value = ''
+                    })
+                    .catch((error) => {
+                        alert(`${fileName} was not found.`)
+                    })
+            })
+        </script>
+    </body>
+</html>

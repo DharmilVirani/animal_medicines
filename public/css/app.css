@@ -1,0 +1,392 @@
+/* Body css */
+
+* {
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+}
+
+.body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-width: 800px;
+    height: 100vh;
+}
+
+input[type='file'] {
+    cursor: pointer;
+}
+
+/* index css */
+
+.index-main-container {
+    display: flex;
+    justify-content: center;
+}
+
+.index-container {
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+}
+
+.index-header {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 60px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #293b6b;
+    font-size: 25px;
+    color: #293b6b;
+}
+
+.index-head {
+    margin-bottom: 100px;
+}
+
+.index-header img {
+    border-radius: 50%;
+}
+
+.index-text-container h5 {
+    margin-top: 10px;
+    text-align: right;
+}
+
+.index-button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    font-size: 20px;
+}
+
+.btn-container .btn {
+    padding: 20px 25px;
+    width: 450px;
+}
+
+.margin-top {
+    margin-top: 50px;
+}
+
+.btn-sub-container {
+    width: 100%;
+}
+
+.btn-sub-container .btn {
+    width: 48%;
+    height: 70px;
+}
+
+.close-btn-container {
+    display: flex;
+    margin-top: 60px;
+}
+
+.close {
+    border: 1px solid #a11414 !important;
+    background-color: #a11414;
+    color: white;
+}
+
+.btn-width {
+    width: 200px !important;
+}
+
+/* Insert-Dosage css */
+
+.insert-dosage-header {
+    width: 500px;
+    margin-bottom: 30px;
+}
+
+.insert-dosage-header h2 {
+    text-align: center;
+}
+
+.insert-main-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+}
+
+.insert-container {
+    border: 1px solid black;
+    border-radius: 20px;
+    padding: 40px;
+    padding-bottom: 20px;
+    width: 400px;
+    max-width: calc(100vw - 25px);
+}
+
+h1 {
+    font-size: 40px;
+    margin-bottom: 40px;
+}
+
+input,
+textarea {
+    border: none;
+    border-bottom: 1px solid black;
+    padding: 10px 0px;
+    margin-bottom: 25px;
+    width: 100%;
+    font-size: 20px;
+}
+
+input:focus {
+    outline: none;
+}
+
+textarea:focus {
+    outline: none;
+}
+
+input::placeholder {
+    opacity: 0.8;
+}
+
+textarea::placeholder {
+    opacity: 0.8;
+}
+
+.form-btn-container {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 20px;
+}
+
+.form-btn-container .btn {
+    width: 48%;
+}
+
+.upload-container {
+    width: 500px;
+}
+
+.upload-container button {
+    width: 100%;
+    height: 70px;
+}
+
+.insert-btn-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.insert-btn-container button {
+    width: 48%;
+}
+
+.fileinput {
+    display: flex;
+    justify-content: space-between;
+    border: none;
+}
+
+.fileinput::-webkit-file-upload-button {
+    margin-right: 25px;
+    padding: 15px;
+    font-size: 20px;
+    border-radius: 1rem;
+    border: none;
+    cursor: pointer;
+    border: 1px solid #293b6b;
+    background-color: white;
+    color: #293b6b;
+}
+
+.file-submit {
+    width: 100%;
+}
+
+/* Insert Pharmacology */
+
+.insert-home {
+    width: 100%;
+}
+
+/* Display-dosage css */
+
+.container {
+    width: 90%;
+    height: 100vh;
+    font-size: 25px;
+}
+
+.display-main-container {
+    display: grid;
+    grid-template-columns: 5% 15% 15% 25% 30%;
+    column-gap: 25px;
+    text-align: left;
+    width: 100%;
+}
+
+.label-container {
+    position: fixed;
+    grid-template-columns: 5% 15% 15% 25% 15% 15%;
+    background-color: white;
+    align-items: center;
+    padding-top: 10px;
+    width: 90%;
+    align-items: baseline;
+}
+
+.data-container {
+    margin-top: 100px;
+}
+
+.label {
+    font-weight: 600;
+    position: sticky;
+}
+
+.btn {
+    margin-bottom: 25px;
+    padding: 15px;
+    font-size: 20px;
+    border-radius: 1rem;
+    border: none;
+    cursor: pointer;
+    border: 1px solid #293b6b;
+}
+
+.btn.primary {
+    background-color: #293b6b;
+    color: white;
+}
+
+.btn.secondary {
+    background-color: white;
+    color: #293b6b;
+}
+
+.btn:hover {
+    box-shadow: 0px 0px 10px 5px rgb(173, 173, 173);
+}
+
+.display-home {
+    width: 160px;
+    line-height: 1.5;
+}
+
+.downloadexcel {
+    width: 180px;
+}
+
+.data {
+    margin-bottom: 20px;
+}
+
+.admin-delete svg {
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 1rem;
+}
+
+.admin-delete svg:hover {
+    /* background-color: #e8e8e8; */
+    color: white;
+    background-color: #293b6b;
+}
+
+.remarks {
+    width: 300px;
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-all;
+}
+
+.remarks:hover {
+    overflow: visible;
+    display: block;
+}
+
+.export-container {
+    display: flex;
+    justify-content: end;
+}
+
+/* Login css */
+
+.login-container {
+    border: 1px solid black;
+    border-radius: 20px;
+    padding: 20px 30px;
+    width: 400px;
+    max-width: calc(100vw - 25px);
+    font-size: 20px;
+}
+
+.login-container h2 {
+    text-align: center;
+    padding-bottom: 25px;
+    color: #293b6b;
+}
+
+.login-btn-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.login-btn-container .btn {
+    width: 49%;
+}
+
+.heading-container {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 25px;
+    margin-bottom: 40px;
+}
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.login-submit {
+    width: 100%;
+}
+
+/* View Pharmacology */
+.autocomplete-suggestions {
+    background-color: white;
+    position: absolute;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    display: none;
+}
+.autocomplete-suggestion {
+    padding: 8px;
+    cursor: pointer;
+    border: 1px solid #293b6b;
+    height: 25px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+}
+.autocomplete-suggestion:hover,
+.autocomplete-suggestion.active {
+    background-color: #293b6b;
+    color: white;
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Display Pharmacology Content</title>
+        <link rel="stylesheet" href="css/app.css" />
+    </head>
+    <body>
+        <div class="container">
+            <pre id="file-content"></pre>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const params = new URLSearchParams(window.location.search)
+                const fileName = params.get('name')
+
+                if (fileName) {
+                    fetch(`http://localhost:3000/pharmacology/${fileName}`)
+                        .then((response) => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok')
+                            }
+                            return response.json()
+                        })
+                        .then((data) => {
+                            if (data.content) {
+                                document.getElementById('file-content').textContent = data.content
+                            } else {
+                                alert('No content found')
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error)
+                            alert('Error retrieving content')
+                        })
+                } else {
+                    alert('No file name provided')
+                }
+            })
+        </script>
+    </body>
+</html>

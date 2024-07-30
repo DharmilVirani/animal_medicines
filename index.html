@@ -1,19 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <link rel="stylesheet" href="./public/app.css" />
+        <link rel="stylesheet" href="./public/css/app.css" />
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Medicine Home</title>
     </head>
     <body>
-        <div class="btn-container">
-            <button type="button" class="btn primary" onclick="location.href='./public/insert.html'">
-                Insert Dosage Data
-            </button>
-            <button type="button" class="btn secondary" onclick="location.href='./public/retrieve.html'">
-                View Dosage Data
-            </button>
+        <div class="index-main-container">
+            <div class="index-container">
+                <div class="index-header index-head">
+                    <img src="./public/Icon.jpg" alt="img" />
+                    <div class="index-text-container">
+                        <h2>Dr. Anil Virani's Veterinary Drug Index</h2>
+                        <h5>Contact : +91 9824249198</h5>
+                    </div>
+                </div>
+                <div class="btn-container user">
+                    <button type="button" class="btn primary" onclick="location.href='./public/view-pharmacology.html'">
+                        View Pharmacology Data
+                    </button>
+                    <button type="button" class="btn secondary" onclick="location.href='./public/view-dosage.html'">
+                        View Dosage Data
+                    </button>
+                    <button class="btn primary" onclick="location.href='login.html'">Admin Login</button>
+                </div>
+
+                <div class="btn-container margin-top admin">
+                    <div class="btn-sub-container">
+                        <div class="index-button-container">
+                            <button
+                                type="button"
+                                class="btn primary"
+                                onclick="location.href='./public/view-pharmacology.html'"
+                            >
+                                View Pharmacology Data
+                            </button>
+                            <button
+                                type="button"
+                                class="btn primary"
+                                onclick="location.href='./public/insert-pharmacology.html'"
+                            >
+                                Insert Pharmacology Data
+                            </button>
+                        </div>
+
+                        <div class="index-button-container">
+                            <button
+                                type="button"
+                                class="btn secondary"
+                                onclick="location.href='./public/view-dosage.html'"
+                            >
+                                View Dosage Data
+                            </button>
+                            <button
+                                type="button"
+                                class="btn secondary"
+                                onclick="location.href='./public/insert-dosage.html'"
+                            >
+                                Insert Dosage Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="close-btn-container">
+                    <button class="btn primary logout-btn btn-width">Logout</button>
+                    <button class="btn close btn-width">Close</button>
+                </div>
+            </div>
         </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const token = localStorage.getItem('token')
+                const userDiv = document.querySelector('.user')
+                const adminDiv = document.querySelector('.admin')
+                const logoutBtn = document.querySelector('.logout-btn')
+                const closeBtnContainer = document.querySelector('.close-btn-container')
+
+                if (token) {
+                    try {
+                        const decodedToken = jwt_decode(token)
+                        const currentTime = Date.now() / 1000
+
+                        if (decodedToken.exp < currentTime) {
+                            localStorage.removeItem('token')
+                            adminDiv.style.display = 'none'
+                            logoutBtn.style.display = 'none'
+                            closeBtnContainer.style.justifyContent = 'end'
+                        } else {
+                            userDiv.style.display = 'none'
+                            closeBtnContainer.style.justifyContent = 'space-between'
+                        }
+                    } catch (e) {
+                        console.error('Invalid token:', e)
+                        adminDiv.style.display = 'none'
+                        logoutBtn.style.display = 'none'
+                        closeBtnContainer.style.justifyContent = 'end'
+                    }
+                } else {
+                    adminDiv.style.display = 'none'
+                    logoutBtn.style.display = 'none'
+                    closeBtnContainer.style.justifyContent = 'end'
+                }
+
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('token')
+                    alert('Logged out successfully.')
+                    window.location.href = 'index.html'
+                })
+            })
+        </script>
     </body>
 </html>
