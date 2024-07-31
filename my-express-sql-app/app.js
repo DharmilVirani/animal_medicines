@@ -64,13 +64,13 @@ app.post('/medicine', (req, res) => {
     const { name, species, dose, remarks } = req.body
 
     // Fetch the last inserted ID
-    db.get('SELECT id FROM drugs ORDER BY id DESC LIMIT 1', (err, row) => {
+    db.get('SELECT MAX(id) as maxId FROM drugs', (err, row) => {
         if (err) {
             console.error('Error fetching last ID:', err)
             return res.status(500).json({ message: 'Error fetching last ID' })
         }
 
-        const newId = row ? row.id + 1 : 1 // If there are no rows, start with ID 1
+        const newId = row ? row.maxId + 1 : 1 // If there are no rows, start with ID 1
 
         db.run(
             `
@@ -91,7 +91,7 @@ app.post('/medicine', (req, res) => {
     })
 })
 
-//Import Excel file
+// Import Excel file and insert data
 app.post('/upload', upload.single('file'), (req, res) => {
     const filePath = req.file.path
 
@@ -104,72 +104,62 @@ app.post('/upload', upload.single('file'), (req, res) => {
         // Log the data read from the Excel file
         console.log('Data read from Excel file:', data)
 
-        db.get('SELECT MAX(id) as maxId FROM drugs', (err, row) => {
-            if (err) {
-                console.error('Error fetching max ID:', err)
-                return res.status(500).json({ message: 'Error fetching max ID' })
-            }
+        const insertPromises = data.map((row) => {
+            return new Promise((resolve, reject) => {
+                const { Name, Species, Dose, Remarks } = row
 
-            let nextId = row ? row.maxId + 1 : 1
+                // Log each row before processing
+                console.log('Processing row:', row)
 
-            const insertPromises = data.map((row) => {
-                return new Promise((resolve, reject) => {
-                    const { Name, Species, Dose, Remarks } = row
+                if (!Name) {
+                    console.error('Name is required but missing in row:', row)
+                    reject('Name is required')
+                    return
+                }
 
-                    // Log each row before processing
-                    console.log('Processing row:', row)
-
-                    if (!Name) {
-                        console.error('Name is required but missing in row:', row)
-                        reject('Name is required')
-                        return
-                    }
-
-                    db.run(
-                        `INSERT INTO drugs (id, name, species, dose, remarks)
-                         SELECT ?, ?, ?, ?, ?
-                         WHERE NOT EXISTS (SELECT 1 FROM drugs WHERE name = ? AND species = ? AND dose = ? AND remarks = ?)`,
-                        [nextId, Name, Species, Dose, Remarks, Name, Species, Dose, Remarks],
-                        function (err) {
-                            if (err) {
-                                console.error('Error inserting drug entry:', err)
-                                reject('Error inserting drug entry')
+                db.run(
+                    `INSERT INTO drugs (name, species, dose, remarks)
+                     SELECT ?, ?, ?, ?
+                     WHERE NOT EXISTS (SELECT 1 FROM drugs WHERE name = ? AND species = ? AND dose = ? AND remarks = ?)`,
+                    [Name, Species, Dose, Remarks, Name, Species, Dose, Remarks],
+                    function (err) {
+                        if (err) {
+                            console.error('Error inserting drug entry:', err)
+                            reject('Error inserting drug entry')
+                        } else {
+                            if (this.changes === 0) {
+                                console.log('Drug data already exists.')
+                                resolve()
                             } else {
-                                if (this.changes === 0) {
-                                    console.log('Drug data already exists.')
-                                    resolve()
-                                } else {
-                                    console.log(`Drug entry added with ID: ${nextId}`)
-                                    nextId++
-                                    resolve()
-                                }
+                                console.log(`Drug entry added with ID: ${this.lastID}`)
+                                resolve()
                             }
                         }
-                    )
+                    }
+                )
+            })
+        })
+
+        Promise.all(insertPromises)
+            .then(() => {
+                res.status(201).json({ message: 'Excel data uploaded and inserted into the database' })
+                fs.unlink(filePath, (err) => {
+                    if (err) {
+                        console.error('Error deleting the uploaded file:', err)
+                    }
                 })
             })
-
-            Promise.all(insertPromises)
-                .then(() => {
-                    res.status(201).json({ message: 'Excel data uploaded and inserted into the database' })
-                    fs.unlink(filePath, (err) => {
-                        if (err) {
-                            console.error('Error deleting the uploaded file:', err)
-                        }
-                    })
-                })
-                .catch((error) => {
-                    console.error('Error during data insertion:', error)
-                    res.status(500).json({ message: 'Error during data insertion' })
-                })
-        })
+            .catch((error) => {
+                console.error('Error during data insertion:', error)
+                res.status(500).json({ message: 'Error during data insertion' })
+            })
     } catch (error) {
         console.error('Error processing the Excel file:', error)
         res.status(500).json({ message: 'Error processing the Excel file' })
     }
 })
 
-//Export Excel File
+// Export data to Excel file
 app.get('/export', async (req, res) => {
     db.all('SELECT * FROM drugs', async (err, rows) => {
         if (err) {
@@ -206,6 +196,7 @@ app.delete('/medicine/:id', (req, res) => {
     db.serialize(() => {
         db.run('BEGIN TRANSACTION')
 
+        // Delete the specific row
         db.run('DELETE FROM drugs WHERE id = ?', [id], function (err) {
             if (err) {
                 db.run('ROLLBACK')
@@ -213,6 +204,7 @@ app.delete('/medicine/:id', (req, res) => {
                 return res.status(500).json({ message: `Error deleting drug entry with ID ${id}` })
             }
 
+            // Decrement IDs of all subsequent rows
             db.run('UPDATE drugs SET id = id - 1 WHERE id > ?', [id], function (err) {
                 if (err) {
                     db.run('ROLLBACK')
@@ -220,16 +212,30 @@ app.delete('/medicine/:id', (req, res) => {
                     return res.status(500).json({ message: `Error decrementing IDs after deleting ID ${id}` })
                 }
 
-                db.run('COMMIT', (err) => {
-                    if (err) {
-                        db.run('ROLLBACK')
-                        console.error('Error committing transaction:', err)
-                        return res.status(500).json({ message: 'Error committing transaction' })
-                    }
+                // Reset the sequence
+                db.run(
+                    'UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM drugs) WHERE name = "drugs"',
+                    function (err) {
+                        if (err) {
+                            db.run('ROLLBACK')
+                            console.error('Error resetting sequence:', err)
+                            return res.status(500).json({ message: 'Error resetting sequence' })
+                        }
 
-                    console.log(`Successfully deleted entry with ID: ${id}`)
-                    res.status(200).json({ message: `Drug entry with ID ${id} deleted and subsequent IDs decremented` })
-                })
+                        db.run('COMMIT', (err) => {
+                            if (err) {
+                                db.run('ROLLBACK')
+                                console.error('Error committing transaction:', err)
+                                return res.status(500).json({ message: 'Error committing transaction' })
+                            }
+
+                            console.log(`Successfully deleted entry with ID: ${id}`)
+                            res.status(200).json({
+                                message: `Drug entry with ID ${id} deleted and subsequent IDs decremented`,
+                            })
+                        })
+                    }
+                )
             })
         })
     })
@@ -240,6 +246,19 @@ app.get('/medicine', (req, res) => {
     const { name, species } = req.query
     const query = 'SELECT * FROM drugs WHERE name = ? AND species = ? ORDER by id'
     db.all(query, [name, species], (err, rows) => {
+        if (err) {
+            console.error('Error retreiveing drug entries: ', err)
+            res.status(500).json({ message: 'Error retrieving drug entries' })
+        } else {
+            res.status(200).json(rows)
+        }
+    })
+})
+
+//All data of drugs
+app.get('/medicineid', (req, res) => {
+    const query = 'SELECT * FROM drugs'
+    db.all(query, (err, rows) => {
         if (err) {
             console.error('Error retreiveing drug entries: ', err)
             res.status(500).json({ message: 'Error retrieving drug entries' })
@@ -276,7 +295,7 @@ const refreshTokenMiddleware = (req, res, next) => {
             if (err) {
                 return res.sendStatus(403)
             }
-            const newToken = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '10m' })
+            const newToken = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '1h' })
             res.setHeader('Authorization', `Bearer ${newToken}`)
             req.user = user
             next()
