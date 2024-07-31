@@ -3,13 +3,13 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Upload Word File</title>
+        <title>Upload Word Files</title>
         <link rel="stylesheet" href="css/app.css" />
     </head>
     <body>
         <div class="ip-main-container body">
             <div class="upload-container">
-                <input type="file" name="file" class="fileinput" tabindex="1" accept=".doc,.docx" required />
+                <input type="file" name="files" class="fileinput" multiple tabindex="1" accept=".doc,.docx" required />
                 <div class="insert-btn-container">
                     <button class="btn secondary insert-home" onclick="location.href='../index.html'" tabindex="3">
                         Back
@@ -46,19 +46,22 @@
                 }
 
                 const formData = new FormData()
-                formData.append('file', fileInput.files[0])
+                // Append all selected files to FormData
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    formData.append('files', fileInput.files[i]) // Use 'files' as the field name
+                }
 
                 fetch('http://localhost:3000/upload-word', {
                     method: 'POST',
                     body: formData,
                 })
-                    .then((response) => response.text())
+                    .then((response) => response.json()) // Expecting a JSON response
                     .then((data) => {
-                        alert(data)
+                        alert(JSON.stringify(data)) // Show response from the server
                     })
                     .catch((error) => {
                         console.error('Error:', error)
-                        alert('Error uploading file')
+                        alert('Error uploading files')
                     })
             })
         </script>

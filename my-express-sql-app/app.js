@@ -344,60 +344,82 @@ db.serialize(() => {
 })
 
 // Upload Word
-app.post('/upload-word', upload.single('file'), (req, res) => {
-    const filePath = req.file.path
-    const fileName = path.parse(req.file.originalname).name
+app.post('/upload-word', upload.array('files'), (req, res) => {
+    const files = req.files // Get the array of uploaded files
 
-    fs.readFile(filePath, (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err)
-            return res.status(500).json({ message: 'Error reading file' })
-        }
+    // Check if files were uploaded
+    if (!files || files.length === 0) {
+        return res.status(400).json({ message: 'No files were uploaded.' })
+    }
 
-        db.get('SELECT id FROM pharmacology WHERE file_name = ?', [fileName], function (err, row) {
-            if (err) {
-                return res.status(500).json({ message: 'Error checking for existing file' })
-            }
+    // Create an array to hold promises for inserting or updating files
+    const promises = files.map((file) => {
+        const filePath = file.path
+        const fileName = path.parse(file.originalname).name
 
-            if (row) {
-                db.run(
-                    'UPDATE pharmacology SET file_content = ? WHERE file_name = ?',
-                    [data, fileName],
-                    function (err) {
-                        if (err) {
-                            return res.status(500).json({ message: 'Error updating data' })
-                        }
-                        res.status(201).json({ message: 'Word file updated in database.' })
+        return new Promise((resolve, reject) => {
+            fs.readFile(filePath, (err, data) => {
+                if (err) {
+                    console.error('Error reading file:', err)
+                    return reject({ message: 'Error reading file' })
+                }
 
-                        fs.unlink(filePath, (err) => {
-                            if (err) {
-                                console.error('Error deleting the uploaded file:', err)
-                            }
-                        })
+                db.get('SELECT id FROM pharmacology WHERE file_name = ?', [fileName], (err, row) => {
+                    if (err) {
+                        return reject({ message: 'Error checking for existing file' })
                     }
-                )
-            } else {
-                db.run(
-                    'INSERT INTO pharmacology (file_name, file_content) VALUES (?, ?)',
-                    [fileName, data],
-                    function (err) {
-                        if (err) {
-                            console.error('Error inserting file into database:', err)
-                            return res.status(500).json({ message: 'Error inserting file into database' })
-                        }
 
-                        res.status(201).send({ message: 'Word file uploaded and inserted into the database' })
-
-                        fs.unlink(filePath, (err) => {
-                            if (err) {
-                                console.error('Error deleting the uploaded file:', err)
+                    if (row) {
+                        // Update existing record
+                        db.run(
+                            'UPDATE pharmacology SET file_content = ? WHERE file_name = ?',
+                            [data, fileName],
+                            (err) => {
+                                if (err) {
+                                    return reject({ message: 'Error updating data' })
+                                }
+                                resolve({ message: `Word file ${fileName} updated in database.` })
+                                // Delete the uploaded file after processing
+                                fs.unlink(filePath, (err) => {
+                                    if (err) {
+                                        console.error('Error deleting the uploaded file:', err)
+                                    }
+                                })
                             }
-                        })
+                        )
+                    } else {
+                        // Insert new record
+                        db.run(
+                            'INSERT INTO pharmacology (file_name, file_content) VALUES (?, ?)',
+                            [fileName, data],
+                            (err) => {
+                                if (err) {
+                                    console.error('Error inserting file into database:', err)
+                                    return reject({ message: 'Error inserting file into database' })
+                                }
+                                resolve({ message: `Word file ${fileName} uploaded and inserted into the database` })
+                                // Delete the uploaded file after processing
+                                fs.unlink(filePath, (err) => {
+                                    if (err) {
+                                        console.error('Error deleting the uploaded file:', err)
+                                    }
+                                })
+                            }
+                        )
                     }
-                )
-            }
+                })
+            })
         })
     })
+
+    // Wait for all file operations to complete
+    Promise.all(promises)
+        .then((results) => {
+            res.status(201).json(results)
+        })
+        .catch((error) => {
+            res.status(500).json(error)
+        })
 })
 
 //Download Word
