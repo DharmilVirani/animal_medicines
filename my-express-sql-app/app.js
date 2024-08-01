@@ -2,7 +2,6 @@
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const multer = require('multer')
-const mammoth = require('mammoth')
 const xlsx = require('xlsx')
 const bodyParser = require('body-parser')
 const sqlite3 = require('sqlite3').verbose()
@@ -16,7 +15,7 @@ const port = 3000
 app.use(bodyParser.json())
 app.use(express.static(path.join(__dirname, 'public')))
 
-const upload = multer({ dest: 'uploads/' })
+const upload = multer({ dest: './' })
 
 app.use(
     cors({
@@ -160,8 +159,23 @@ app.post('/upload', upload.single('file'), (req, res) => {
 })
 
 // Export data to Excel file
-app.get('/export', async (req, res) => {
-    db.all('SELECT * FROM drugs', async (err, rows) => {
+app.get('/export', (req, res) => {
+    const { name, species } = req.query
+
+    let query = 'SELECT * FROM drugs'
+    const params = []
+
+    if (name) {
+        query += ' WHERE name = ?'
+        params.push(name)
+    }
+
+    if (species) {
+        query += name ? ' AND species = ?' : ' WHERE species = ?'
+        params.push(species)
+    }
+
+    db.all(query, params, async (err, rows) => {
         if (err) {
             console.error('Error executing query:', err)
             res.status(500).json({ message: 'Error executing query' })
@@ -188,7 +202,6 @@ app.get('/export', async (req, res) => {
         res.send(buffer)
     })
 })
-
 // Route to delete a drug entry by ID and decrement subsequent IDs
 app.delete('/medicine/:id', (req, res) => {
     const id = parseInt(req.params.id)
