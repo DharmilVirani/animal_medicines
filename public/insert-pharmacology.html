@@ -46,18 +46,17 @@
                 }
 
                 const formData = new FormData()
-                // Append all selected files to FormData
                 for (let i = 0; i < fileInput.files.length; i++) {
-                    formData.append('files', fileInput.files[i]) // Use 'files' as the field name
+                    formData.append('files', fileInput.files[i])
                 }
 
                 fetch('http://localhost:3000/upload-word', {
                     method: 'POST',
                     body: formData,
                 })
-                    .then((response) => response.json()) // Expecting a JSON response
+                    .then((response) => response.json())
                     .then((data) => {
-                        alert(JSON.stringify(data)) // Show response from the server
+                        alert(data.join('\n')) // Show each message in the array on a new line
                     })
                     .catch((error) => {
                         console.error('Error:', error)

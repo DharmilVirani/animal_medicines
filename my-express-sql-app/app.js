@@ -358,14 +358,12 @@ db.serialize(() => {
 
 // Upload Word
 app.post('/upload-word', upload.array('files'), (req, res) => {
-    const files = req.files // Get the array of uploaded files
+    const files = req.files
 
-    // Check if files were uploaded
     if (!files || files.length === 0) {
         return res.status(400).json({ message: 'No files were uploaded.' })
     }
 
-    // Create an array to hold promises for inserting or updating files
     const promises = files.map((file) => {
         const filePath = file.path
         const fileName = path.parse(file.originalname).name
@@ -374,25 +372,23 @@ app.post('/upload-word', upload.array('files'), (req, res) => {
             fs.readFile(filePath, (err, data) => {
                 if (err) {
                     console.error('Error reading file:', err)
-                    return reject({ message: 'Error reading file' })
+                    return reject('Error reading file')
                 }
 
                 db.get('SELECT id FROM pharmacology WHERE file_name = ?', [fileName], (err, row) => {
                     if (err) {
-                        return reject({ message: 'Error checking for existing file' })
+                        return reject('Error checking for existing file')
                     }
 
                     if (row) {
-                        // Update existing record
                         db.run(
                             'UPDATE pharmacology SET file_content = ? WHERE file_name = ?',
                             [data, fileName],
                             (err) => {
                                 if (err) {
-                                    return reject({ message: 'Error updating data' })
+                                    return reject('Error updating data')
                                 }
-                                resolve({ message: `Word file ${fileName} updated in database.` })
-                                // Delete the uploaded file after processing
+                                resolve(`Word file ${fileName} updated in database.`)
                                 fs.unlink(filePath, (err) => {
                                     if (err) {
                                         console.error('Error deleting the uploaded file:', err)
@@ -401,17 +397,15 @@ app.post('/upload-word', upload.array('files'), (req, res) => {
                             }
                         )
                     } else {
-                        // Insert new record
                         db.run(
                             'INSERT INTO pharmacology (file_name, file_content) VALUES (?, ?)',
                             [fileName, data],
                             (err) => {
                                 if (err) {
                                     console.error('Error inserting file into database:', err)
-                                    return reject({ message: 'Error inserting file into database' })
+                                    return reject('Error inserting file into database')
                                 }
-                                resolve({ message: `Word file ${fileName} uploaded and inserted into the database` })
-                                // Delete the uploaded file after processing
+                                resolve(`Word file ${fileName} uploaded and inserted into the database`)
                                 fs.unlink(filePath, (err) => {
                                     if (err) {
                                         console.error('Error deleting the uploaded file:', err)
@@ -425,14 +419,9 @@ app.post('/upload-word', upload.array('files'), (req, res) => {
         })
     })
 
-    // Wait for all file operations to complete
     Promise.all(promises)
-        .then((results) => {
-            res.status(201).json(results)
-        })
-        .catch((error) => {
-            res.status(500).json(error)
-        })
+        .then((messages) => res.json(messages))
+        .catch((error) => res.status(500).json({ message: error }))
 })
 
 //Download Word
