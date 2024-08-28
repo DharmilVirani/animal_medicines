@@ -3,18 +3,18 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Upload Word Files</title>
+        <title>Upload HTML Files</title>
         <link rel="stylesheet" href="css/app.css" />
     </head>
     <body>
         <div class="ip-main-container body">
             <div class="upload-container">
-                <input type="file" name="files" class="fileinput" multiple tabindex="1" accept=".doc,.docx" required />
+                <input type="file" name="files" class="fileinput" multiple tabindex="1" accept=".htm,.html" required />
                 <div class="insert-btn-container">
                     <button class="btn secondary insert-home" onclick="location.href='../index.html'" tabindex="3">
                         Back
                     </button>
-                    <button class="btn primary file-submit" tabindex="2">Upload Word</button>
+                    <button class="btn primary file-submit" tabindex="2">Upload HTML</button>
                 </div>
                 <button
                     type="button"
@@ -35,11 +35,11 @@
                     return
                 }
 
-                const allowedExtensions = /(\.doc|\.docx)$/i
+                const allowedExtensions = /(\.htm|\.html)$/i
                 for (let i = 0; i < fileInput.files.length; i++) {
                     const file = fileInput.files[i]
                     if (!allowedExtensions.exec(file.name)) {
-                        alert('Invalid file type. Please select Word documents only.')
+                        alert('Invalid file type. Please select HTML documents only.')
                         fileInput.value = ''
                         return
                     }
@@ -50,7 +50,7 @@
                     formData.append('files', fileInput.files[i])
                 }
 
-                fetch('http://localhost:3000/upload-word', {
+                fetch('http://localhost:3000/upload-html', {
                     method: 'POST',
                     body: formData,
                 })

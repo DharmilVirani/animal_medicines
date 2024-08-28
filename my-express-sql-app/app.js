@@ -62,31 +62,43 @@ app.use(express.json())
 app.post('/medicine', (req, res) => {
     const { name, species, dose, remarks } = req.body
 
-    // Fetch the last inserted ID
-    db.get('SELECT MAX(id) as maxId FROM drugs', (err, row) => {
+    // Check if the dosage already exists
+    db.get('SELECT * FROM drugs WHERE dose = ?', [dose], (err, row) => {
         if (err) {
-            console.error('Error fetching last ID:', err)
-            return res.status(500).json({ message: 'Error fetching last ID' })
+            console.error('Error checking for duplicate dosage:', err)
+            return res.status(500).json({ message: 'Error checking for duplicate dosage' })
         }
 
-        const newId = row ? row.maxId + 1 : 1 // If there are no rows, start with ID 1
+        if (row) {
+            // Duplicate dosage found
+            return res.status(409).json('Data already exists')
+        }
 
-        db.run(
-            `
-            INSERT INTO drugs (id, name, species, dose, remarks) 
-            VALUES (?, ?, ?, ?, ?)
-        `,
-            [newId, name, species, dose, remarks],
-            function (err) {
-                if (err) {
-                    console.error('Error inserting drug entry:', err)
-                    res.status(500).json({ message: 'Error inserting drug entry' })
-                } else {
-                    console.log(`Drug entry added with ID: ${newId}`)
-                    res.status(201).json({ message: `Drug entry added with ID: ${newId}` })
-                }
+        // Fetch the last inserted ID
+        db.get('SELECT MAX(id) as maxId FROM drugs', (err, row) => {
+            if (err) {
+                console.error('Error fetching last ID:', err)
+                return res.status(500).json({ message: 'Error fetching last ID' })
             }
-        )
+
+            const newId = row ? row.maxId + 1 : 1 // If there are no rows, start with ID 1
+
+            db.run(
+                `
+                INSERT INTO drugs (id, name, species, dose, remarks) 
+                VALUES (?, ?, ?, ?, ?)
+            `,
+                [newId, name, species, dose, remarks],
+                function (err) {
+                    if (err) {
+                        console.error('Error inserting drug entry:', err)
+                        res.status(500).json({ message: 'Error inserting drug entry' })
+                    } else {
+                        res.status(201).json(`Drug entry added with ID: ${newId}`)
+                    }
+                }
+            )
+        })
     })
 })
 
@@ -100,15 +112,9 @@ app.post('/upload', upload.single('file'), (req, res) => {
         const sheet = workbook.Sheets[sheetName]
         const data = xlsx.utils.sheet_to_json(sheet)
 
-        // Log the data read from the Excel file
-        console.log('Data read from Excel file:', data)
-
         const insertPromises = data.map((row) => {
             return new Promise((resolve, reject) => {
                 const { Name, Species, Dose, Remarks } = row
-
-                // Log each row before processing
-                console.log('Processing row:', row)
 
                 if (!Name) {
                     console.error('Name is required but missing in row:', row)
@@ -116,23 +122,35 @@ app.post('/upload', upload.single('file'), (req, res) => {
                     return
                 }
 
-                db.run(
-                    `INSERT INTO drugs (name, species, dose, remarks)
-                     SELECT ?, ?, ?, ?
-                     WHERE NOT EXISTS (SELECT 1 FROM drugs WHERE name = ? AND species = ? AND dose = ? AND remarks = ?)`,
-                    [Name, Species, Dose, Remarks, Name, Species, Dose, Remarks],
-                    function (err) {
+                // Check if the row already exists
+                db.get(
+                    `SELECT 1 FROM drugs WHERE name = ? AND species = ? AND dose = ? AND remarks = ?`,
+                    [Name, Species, Dose, Remarks],
+                    (err, existingRow) => {
                         if (err) {
-                            console.error('Error inserting drug entry:', err)
-                            reject('Error inserting drug entry')
+                            console.error('Error checking for existing entry:', err)
+                            reject('Error checking for existing entry')
+                            return
+                        }
+
+                        if (existingRow) {
+                            // Row already exists, skip insertion
+                            resolve() // Resolve promise even if row is skipped
                         } else {
-                            if (this.changes === 0) {
-                                console.log('Drug data already exists.')
-                                resolve()
-                            } else {
-                                console.log(`Drug entry added with ID: ${this.lastID}`)
-                                resolve()
-                            }
+                            // Insert the new row
+                            db.run(
+                                `INSERT INTO drugs (name, species, dose, remarks)
+                                 VALUES (?, ?, ?, ?)`,
+                                [Name, Species, Dose, Remarks],
+                                function (err) {
+                                    if (err) {
+                                        console.error('Error inserting drug entry:', err)
+                                        reject('Error inserting drug entry')
+                                    } else {
+                                        resolve()
+                                    }
+                                }
+                            )
                         }
                     }
                 )
@@ -242,9 +260,8 @@ app.delete('/medicine/:id', (req, res) => {
                                 return res.status(500).json({ message: 'Error committing transaction' })
                             }
 
-                            console.log(`Successfully deleted entry with ID: ${id}`)
                             res.status(200).json({
-                                message: `Drug entry with ID ${id} deleted and subsequent IDs decremented`,
+                                message: `Drug entry with ID ${id} deleted.`,
                             })
                         })
                     }
@@ -308,7 +325,7 @@ const refreshTokenMiddleware = (req, res, next) => {
             if (err) {
                 return res.sendStatus(403)
             }
-            const newToken = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '1h' })
+            const newToken = jwt.sign({ username: user.username }, SECRET_KEY, { expiresIn: '10m' })
             res.setHeader('Authorization', `Bearer ${newToken}`)
             req.user = user
             next()
@@ -356,8 +373,8 @@ db.serialize(() => {
     )
 })
 
-// Upload Word
-app.post('/upload-word', upload.array('files'), (req, res) => {
+// Upload HTML
+app.post('/upload-html', upload.array('files'), (req, res) => {
     const files = req.files
 
     if (!files || files.length === 0) {
@@ -388,7 +405,7 @@ app.post('/upload-word', upload.array('files'), (req, res) => {
                                 if (err) {
                                     return reject('Error updating data')
                                 }
-                                resolve(`Word file ${fileName} updated in database.`)
+                                resolve(`HTML file ${fileName} updated in database.`)
                                 fs.unlink(filePath, (err) => {
                                     if (err) {
                                         console.error('Error deleting the uploaded file:', err)
@@ -405,7 +422,7 @@ app.post('/upload-word', upload.array('files'), (req, res) => {
                                     console.error('Error inserting file into database:', err)
                                     return reject('Error inserting file into database')
                                 }
-                                resolve(`Word file ${fileName} uploaded and inserted into the database`)
+                                resolve(`HTML file ${fileName} uploaded and inserted into the database`)
                                 fs.unlink(filePath, (err) => {
                                     if (err) {
                                         console.error('Error deleting the uploaded file:', err)
@@ -424,7 +441,7 @@ app.post('/upload-word', upload.array('files'), (req, res) => {
         .catch((error) => res.status(500).json({ message: error }))
 })
 
-//Download Word
+//Download HTML
 app.get('/pharmacology/:fileName', (req, res) => {
     const fileName = req.params.fileName
 
@@ -438,8 +455,8 @@ app.get('/pharmacology/:fileName', (req, res) => {
             return res.status(404).json({ message: 'File not found' })
         }
 
-        res.setHeader('Content-Disposition', `attachment; filename=${fileName}.docx`)
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        // Set Content-Type to text/html to display the HTML in browser
+        res.setHeader('Content-Type', 'text/html')
         res.send(row.file_content)
     })
 })
@@ -490,9 +507,8 @@ app.delete('/pharmacology-delete/:filename', (req, res) => {
                             return res.status(500).json({ message: 'Error committing transaction' })
                         }
 
-                        console.log(`Successfully deleted ${fileName}`)
                         res.status(200).json({
-                            message: `Successfully deleted ${fileName} and subsequent IDs decremented`,
+                            message: `Successfully deleted ${fileName}`,
                         })
                     })
                 })
