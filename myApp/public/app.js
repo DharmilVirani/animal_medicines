@@ -12,19 +12,50 @@ const path = require('path')
 const app = express()
 const port = 3000
 
-app.use(bodyParser.json())
-app.use(express.static(path.join(__dirname, 'public')))
+// Simplified body-parser usage
+app.use(express.json()) // Parses incoming JSON requests
+app.use(express.urlencoded({ extended: true })) // Parses URL-encoded bodies
 
-const upload = multer({ dest: './' })
+// Static file serving
+app.use(express.static(path.join(__dirname, '..', 'public')))
 
+const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data')
+const upload = multer({ dest: dataDir })
+const dbPath = path.join(dataDir, 'medicine.db')
+
+// Check if data directory exists, otherwise log and create it
+if (!fs.existsSync(dataDir)) {
+    console.error('Data directory does not exist, creating it...')
+    fs.mkdirSync(dataDir)
+}
+
+// Check if the database file exists
+if (!fs.existsSync(dbPath)) {
+    console.error('Database file does not exist, exiting...')
+    process.exit(1)
+}
+
+// Route for the main index page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
+})
+
+// CORS configuration for specific origins
+const allowedOrigins = ['http://localhost:3000']
 app.use(
     cors({
-        allowedOrigins: ['http://localhost:3000'],
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true)
+            } else {
+                callback(new Error('Not allowed by CORS'))
+            }
+        },
     })
 )
 
 // Create a new SQLite database connection
-const db = new sqlite3.Database('medicines.db', (err) => {
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Could not connect to database medicines', err)
     } else {
@@ -94,7 +125,7 @@ app.post('/medicine', (req, res) => {
                         console.error('Error inserting drug entry:', err)
                         res.status(500).json({ message: 'Error inserting drug entry' })
                     } else {
-                        res.status(201).json(`Drug entry added with ID: ${newId}`)
+                        res.status(201).json('Drug entry added.')
                     }
                 }
             )
@@ -134,10 +165,8 @@ app.post('/upload', upload.single('file'), (req, res) => {
                         }
 
                         if (existingRow) {
-                            // Row already exists, skip insertion
-                            resolve() // Resolve promise even if row is skipped
+                            resolve()
                         } else {
-                            // Insert the new row
                             db.run(
                                 `INSERT INTO drugs (name, species, dose, remarks)
                                  VALUES (?, ?, ?, ?)`,
@@ -159,7 +188,6 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
         Promise.all(insertPromises)
             .then(() => {
-                res.status(201).json({ message: 'Excel data uploaded and inserted into the database' })
                 fs.unlink(filePath, (err) => {
                     if (err) {
                         console.error('Error deleting the uploaded file:', err)
@@ -220,6 +248,47 @@ app.get('/export', (req, res) => {
         res.send(buffer)
     })
 })
+
+app.get('/exportAll', async (req, res) => {
+    try {
+        // Create a new workbook and worksheet
+        const workbook = new excelJS.Workbook()
+        const worksheet = workbook.addWorksheet('All Dosage Data')
+
+        // Define the columns for the worksheet
+        worksheet.columns = [
+            { header: 'Name', key: 'name', width: 30 },
+            { header: 'Species', key: 'species', width: 30 },
+            { header: 'Dose', key: 'dose', width: 20 },
+            { header: 'Remarks', key: 'remarks', width: 50 },
+        ]
+
+        // Fetch data from the drug table, ordered by name and species
+        db.all('SELECT * FROM drugs ORDER BY name, species', [], (err, rows) => {
+            if (err) {
+                throw err
+            }
+
+            // Add rows to the worksheet
+            rows.forEach((row) => {
+                worksheet.addRow(row)
+            })
+
+            // Set the response headers to force download the Excel file
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            res.setHeader('Content-Disposition', 'attachment; filename=Drug_Index_All.xlsx')
+
+            // Write the workbook to the response
+            workbook.xlsx.write(res).then(() => {
+                res.end()
+            })
+        })
+    } catch (error) {
+        console.error('Error exporting data:', error)
+        res.status(500).send('Failed to export data')
+    }
+})
+
 // Route to delete a drug entry by ID and decrement subsequent IDs
 app.delete('/medicine/:id', (req, res) => {
     const id = parseInt(req.params.id)
@@ -276,19 +345,6 @@ app.get('/medicine', (req, res) => {
     const { name, species } = req.query
     const query = 'SELECT * FROM drugs WHERE name = ? AND species = ? ORDER by id'
     db.all(query, [name, species], (err, rows) => {
-        if (err) {
-            console.error('Error retreiveing drug entries: ', err)
-            res.status(500).json({ message: 'Error retrieving drug entries' })
-        } else {
-            res.status(200).json(rows)
-        }
-    })
-})
-
-//All data of drugs
-app.get('/medicineid', (req, res) => {
-    const query = 'SELECT * FROM drugs'
-    db.all(query, (err, rows) => {
         if (err) {
             console.error('Error retreiveing drug entries: ', err)
             res.status(500).json({ message: 'Error retrieving drug entries' })
@@ -441,7 +497,7 @@ app.post('/upload-html', upload.array('files'), (req, res) => {
         .catch((error) => res.status(500).json({ message: error }))
 })
 
-//Download HTML
+//Display HTML
 app.get('/pharmacology/:fileName', (req, res) => {
     const fileName = req.params.fileName
 
@@ -529,15 +585,15 @@ app.get('/pharmacology-getFilenames', (req, res) => {
     })
 })
 
-//Get name and spcies from drugs table
+//Get name and species from drugs table
 app.get('/drugs-namespecies', (req, res) => {
     db.all('SELECT name, species FROM drugs', (err, rows) => {
         if (err) {
             res.status(500).json({ error: err.message })
             return
         }
-        const names = [...new Set(rows.map((row) => row.name))] // Get unique names
-        const species = [...new Set(rows.map((row) => row.species))] // Get unique species
+        const names = [...new Set(rows.map((row) => row.name))]
+        const species = [...new Set(rows.map((row) => row.species))]
         res.json({ names: names, species: species })
     })
 })

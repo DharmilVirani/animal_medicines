@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <link rel="stylesheet" href="./public/css/app.css" />
+        <link rel="stylesheet" href="./css/app.css" />
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Medicine Home</title>
@@ -10,17 +10,17 @@
         <div class="index-main-container">
             <div class="index-container">
                 <div class="index-header index-head">
-                    <img src="./public/Icon.jpg" alt="img" />
+                    <img src="./Icon.jpg" alt="img" />
                     <div class="index-text-container">
                         <h2>Dr. Anil Virani's Veterinary Drug Index</h2>
                         <h5>Contact : +91 9824249198</h5>
                     </div>
                 </div>
                 <div class="btn-container user">
-                    <button type="button" class="btn primary" onclick="location.href='./public/view-pharmacology.html'">
+                    <button type="button" class="btn primary" onclick="location.href='./view-pharmacology.html'">
                         View Pharmacology Data
                     </button>
-                    <button type="button" class="btn secondary" onclick="location.href='./public/view-dosage.html'">
+                    <button type="button" class="btn secondary" onclick="location.href='./view-dosage.html'">
                         View Dosage Data
                     </button>
                     <button class="btn primary" onclick="location.href='login.html'">Admin Login</button>
@@ -32,32 +32,20 @@
                             <button
                                 type="button"
                                 class="btn primary"
-                                onclick="location.href='./public/view-pharmacology.html'"
+                                onclick="location.href='./view-pharmacology.html'"
                             >
                                 View Pharmacology Data
                             </button>
-                            <button
-                                type="button"
-                                class="btn primary"
-                                onclick="location.href='./public/insert-pharmacology.html'"
-                            >
+                            <button type="button" class="btn primary" onclick="toInsertPharmacology()">
                                 Insert Pharmacology Data
                             </button>
                         </div>
 
                         <div class="index-button-container">
-                            <button
-                                type="button"
-                                class="btn secondary"
-                                onclick="location.href='./public/view-dosage.html'"
-                            >
+                            <button type="button" class="btn secondary" onclick="location.href='./view-dosage.html'">
                                 View Dosage Data
                             </button>
-                            <button
-                                type="button"
-                                class="btn secondary"
-                                onclick="location.href='./public/insert-dosage.html'"
-                            >
+                            <button type="button" class="btn secondary" onclick="toInsertDosage()">
                                 Insert Dosage Data
                             </button>
                         </div>
@@ -107,10 +95,24 @@
 
                 logoutBtn.addEventListener('click', () => {
                     localStorage.removeItem('token')
-                    alert('Logged out successfully.')
-                    window.location.href = 'index.html'
+                    setTimeout(() => {
+                        window.location.href = 'index.html'
+                    }, 100)
                 })
+
+                // Reload every 10 minutes
+                setTimeout(() => {
+                    window.location.reload()
+                }, 600000)
             })
+
+            function toInsertPharmacology() {
+                window.location.href = './insert-pharmacology.html'
+            }
+
+            function toInsertDosage() {
+                location.href = './insert-dosage.html'
+            }
         </script>
     </body>
 </html>

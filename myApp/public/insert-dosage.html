@@ -15,16 +15,17 @@
                 <textarea name="remarks" id="remarks" placeholder="Remarks" rows="3" tabindex="4"></textarea>
 
                 <div class="form-btn-container">
-                    <button class="btn secondary" onclick="location.href='../index.html'" tabindex="6">Back</button>
-                    <button class="btn primary submit-button" tabindex="5">Submit</button>
+                    <button class="btn secondary" onclick="location.href='./index.html'" tabindex="6">Back</button>
+                    <button class="btn primary submit-button" tabindex="5" onclick="reload()">Submit</button>
                 </div>
             </div>
             <div class="upload-container">
                 <input type="file" name="file" class="fileinput" accept=".xlsx" required />
-                <button class="btn primary file-submit">Upload Excel</button>
+                <button class="btn primary file-submit" onclick="reload()">Upload Excel</button>
             </div>
         </div>
 
+        <script src="./js/autocomplete.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', (event) => {
                 const token = localStorage.getItem('token')
@@ -77,14 +78,14 @@
                         return response.text()
                     })
                     .then((message) => {
-                        alert(message)
+                        alert('Drug entry added.')
                     })
                     .catch((error) => {
                         console.error('Error:', error)
                         alert(error.message)
                     })
                 document.querySelectorAll('input').forEach((input) => (input.value = '')) // Clear form
-                document.getElementById('remarks').value = '' // Clear textarea
+                document.getElementById('remarks').value = ''
             })
 
             document.querySelector('.file-submit').addEventListener('click', function (event) {
@@ -119,7 +120,7 @@
                         return response.text()
                     })
                     .then((data) => {
-                        alert('Excel data uploaded and inserted into the database')
+                        alert('Dosage Data Uploaded.')
                     })
                     .catch((error) => {
                         console.error('Error:', error)

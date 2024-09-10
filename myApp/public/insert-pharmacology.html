@@ -11,10 +11,10 @@
             <div class="upload-container">
                 <input type="file" name="files" class="fileinput" multiple tabindex="1" accept=".htm,.html" required />
                 <div class="insert-btn-container">
-                    <button class="btn secondary insert-home" onclick="location.href='../index.html'" tabindex="3">
+                    <button class="btn secondary insert-home" onclick="location.href='./index.html'" tabindex="3">
                         Back
                     </button>
-                    <button class="btn primary file-submit" tabindex="2">Upload HTML</button>
+                    <button class="btn primary file-submit" tabindex="2" onclick="reload()">Upload HTML</button>
                 </div>
                 <button
                     type="button"
@@ -27,6 +27,7 @@
             </div>
         </div>
 
+        <script src="./js/autocomplete.js"></script>
         <script>
             document.querySelector('.file-submit').addEventListener('click', function () {
                 const fileInput = document.querySelector('.fileinput')
@@ -54,9 +55,14 @@
                     method: 'POST',
                     body: formData,
                 })
-                    .then((response) => response.json())
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok.')
+                        }
+                        return response.json()
+                    })
                     .then((data) => {
-                        alert(data.join('\n')) // Show each message in the array on a new line
+                        alert(data.join('\n'))
                     })
                     .catch((error) => {
                         console.error('Error:', error)

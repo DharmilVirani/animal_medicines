@@ -133,3 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDeleteWord(deleteButton, nameInput, nameSuggestionsContainer)
     }
 })
+
+const reload = () => {
+    setTimeout(() => {
+        window.location.reload()
+    }, 100)
+}

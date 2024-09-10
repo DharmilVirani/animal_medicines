@@ -14,8 +14,8 @@
                 <input type="text" placeholder="Species" id="species" class="input" tabindex="2" />
                 <div class="autocomplete-suggestions" id="species-suggestions"></div>
                 <div class="form-btn-container">
-                    <button class="btn secondary" onclick="location.href='../index.html'" tabindex="4">Back</button>
-                    <button class="btn primary submit" tabindex="3">Submit</button>
+                    <button class="btn secondary" onclick="location.href='./index.html'" tabindex="4">Back</button>
+                    <button class="btn primary submit" tabindex="3" onclick="reload()">Submit</button>
                 </div>
             </div>
         </div>
@@ -181,6 +181,11 @@
                     )
                 }
             })
+            const reload = () => {
+                setTimeout(() => {
+                    window.location.reload()
+                }, 100)
+            }
         </script>
     </body>
 </html>
