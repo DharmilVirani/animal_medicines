@@ -7,6 +7,10 @@
         <title>Login</title>
     </head>
     <body class="body">
+        <div id="customAlert">
+            <p id="alertMessage"></p>
+        </div>
+        <div id="alertOverlay"></div>
         <div class="login-container">
             <h2>Admin Login</h2>
             <div>
@@ -15,10 +19,11 @@
             </div>
             <div class="login-btn-container">
                 <button class="btn secondary" onclick="location.href='./index.html'" tabindex="4">Back</button>
-                <button class="btn primary login-submit" tabindex="3">Submit</button>
+                <button class="btn primary login-submit" tabindex="3">Login</button>
             </div>
         </div>
 
+        <script src="./js/customAlert.js"></script>
         <script>
             const submitBtn = document.getElementsByClassName('login-submit')[0]
             const usernameInput = document.getElementById('username')
@@ -31,7 +36,8 @@
                 const password = passwordInput.value.trim()
 
                 if (username === '' || password === '') {
-                    alert('Please fill out all the fields.')
+                    showCustomAlert('Please fill out all the fields.')
+
                     return
                 }
 
@@ -58,7 +64,7 @@
                         }
                     })
                     .catch((error) => {
-                        alert(error.message)
+                        showCustomAlert(error.message)
                     })
             }
 

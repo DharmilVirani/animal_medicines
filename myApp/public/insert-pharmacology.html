@@ -7,6 +7,10 @@
         <link rel="stylesheet" href="css/app.css" />
     </head>
     <body>
+        <div id="customAlert">
+            <p id="alertMessage"></p>
+        </div>
+        <div id="alertOverlay"></div>
         <div class="ip-main-container body">
             <div class="upload-container">
                 <input type="file" name="files" class="fileinput" multiple tabindex="1" accept=".htm,.html" required />
@@ -27,12 +31,13 @@
             </div>
         </div>
 
+        <script src="./js/customAlert.js"></script>
         <script src="./js/autocomplete.js"></script>
         <script>
             document.querySelector('.file-submit').addEventListener('click', function () {
                 const fileInput = document.querySelector('.fileinput')
                 if (fileInput.files.length === 0) {
-                    alert('Please select a file.')
+                    showCustomAlert('Please select a file.')
                     return
                 }
 
@@ -40,7 +45,7 @@
                 for (let i = 0; i < fileInput.files.length; i++) {
                     const file = fileInput.files[i]
                     if (!allowedExtensions.exec(file.name)) {
-                        alert('Invalid file type. Please select HTML documents only.')
+                        showCustomAlert('Invalid file type. Please select HTML documents only.')
                         fileInput.value = ''
                         return
                     }
@@ -62,12 +67,13 @@
                         return response.json()
                     })
                     .then((data) => {
-                        alert(data.join('\n'))
+                        showCustomAlert(data.join('\n'))
                     })
                     .catch((error) => {
                         console.error('Error:', error)
-                        alert('Error uploading files')
+                        showCustomAlert('Error uploading files')
                     })
+                fileInput.value = ''
             })
         </script>
     </body>

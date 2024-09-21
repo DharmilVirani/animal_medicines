@@ -7,10 +7,15 @@
         <link rel="stylesheet" href="css/app.css" />
     </head>
     <body>
+        <div id="customAlert">
+            <p id="alertMessage"></p>
+        </div>
+        <div id="alertOverlay"></div>
         <div class="container">
             <pre id="file-content"></pre>
         </div>
 
+        <script src="./js/customAlert.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const params = new URLSearchParams(window.location.search)
@@ -28,15 +33,15 @@
                             if (data.content) {
                                 document.getElementById('file-content').textContent = data.content
                             } else {
-                                alert('No content found')
+                                showCustomAlert('No content found')
                             }
                         })
                         .catch((error) => {
                             console.error('Error:', error)
-                            alert('Error retrieving content')
+                            showCustomAlert('Error retrieving content')
                         })
                 } else {
-                    alert('No file name provided')
+                    showCustomAlert('No file name provided')
                 }
             })
         </script>

@@ -7,6 +7,10 @@
         <title>Insert Dosage</title>
     </head>
     <body>
+        <div id="customAlert">
+            <p id="alertMessage"></p>
+        </div>
+        <div id="alertOverlay"></div>
         <div class="insert-main-container body">
             <div class="insert-container">
                 <input type="text" placeholder="Name" id="name" name="name" tabindex="1" required />
@@ -25,6 +29,7 @@
             </div>
         </div>
 
+        <script src="./js/customAlert.js"></script>
         <script src="./js/autocomplete.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', (event) => {
@@ -47,7 +52,7 @@
                 })
 
                 if (!valid) {
-                    alert('Please fill out all the fields.')
+                    showCustomAlert('Please fill out all the fields.')
                     return
                 }
 
@@ -78,11 +83,11 @@
                         return response.text()
                     })
                     .then((message) => {
-                        alert('Drug entry added.')
+                        showCustomAlert('Drug entry added.')
                     })
                     .catch((error) => {
                         console.error('Error:', error)
-                        alert(error.message)
+                        showCustomAlert(error.message)
                     })
                 document.querySelectorAll('input').forEach((input) => (input.value = '')) // Clear form
                 document.getElementById('remarks').value = ''
@@ -94,7 +99,7 @@
                 const formData = new FormData()
 
                 if (fileInput.files.length === 0) {
-                    alert('Please select a file.')
+                    showCustomAlert('Please select a file.')
                     return
                 }
 
@@ -102,7 +107,7 @@
                 const allowedExtensions = /(\.xlsx|\.xls)$/i
 
                 if (!allowedExtensions.exec(file.name)) {
-                    alert('Invalid file type. Please select an Excel file.')
+                    showCustomAlert('Invalid file type. Please select an Excel file.')
                     fileInput.value = ''
                     return
                 }
@@ -115,17 +120,21 @@
                 })
                     .then((response) => {
                         if (!response.ok) {
-                            throw new Error('Network response was not ok')
+                            return response.json().then((data) => {
+                                throw new Error(data.message || 'Network response was not ok')
+                            })
                         }
-                        return response.text()
+                        return response.json() // Assuming the server responds with JSON
                     })
                     .then((data) => {
-                        alert('Dosage Data Uploaded.')
+                        console.log('Server response:', data)
+                        showCustomAlert('Dosage Data Uploaded.')
                     })
                     .catch((error) => {
-                        console.error('Error:', error)
-                        alert('Error uploading file')
+                        console.error('Fetch error details:', error)
+                        showCustomAlert('Error uploading file: ' + error.message)
                     })
+                fileInput.value = ''
             })
         </script>
     </body>

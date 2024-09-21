@@ -7,6 +7,10 @@
         <title>Medicine Display</title>
     </head>
     <body class="body">
+        <div id="customAlert">
+            <p id="alertMessage"></p>
+        </div>
+        <div id="alertOverlay"></div>
         <div class="container">
             <div class="display-main-container label-container">
                 <div class="label"></div>
@@ -25,6 +29,7 @@
             </div>
         </div>
 
+        <script src="./js/customAlert.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const queryParams = new URLSearchParams(window.location.search)
@@ -77,12 +82,12 @@
                                                     // Reload the page after successful deletion
                                                     window.location.reload()
                                                 } else {
-                                                    alert('Error removing data')
+                                                    showCustomAlert('Error removing data')
                                                 }
                                             })
                                             .catch((error) => {
                                                 console.error('Error:', error)
-                                                alert('Error removing data')
+                                                showCustomAlert('Error removing data')
                                             })
                                     })
                                 })
@@ -96,7 +101,7 @@
                     })
                     .catch((error) => {
                         console.error('Error:', error)
-                        alert('Error retrieving data')
+                        showCustomAlert('Error retrieving data')
                     })
             })
 
@@ -121,14 +126,14 @@
                         const url = window.URL.createObjectURL(blob)
                         const a = document.createElement('a')
                         a.href = url
-                        a.download = 'Drug_Index.xlsx'
+                        a.download = `${name}_${species}.xlsx`
                         document.body.appendChild(a)
                         a.click()
                         a.remove()
                     })
                     .catch((error) => {
                         console.error('Error:', error)
-                        alert('Error exporting data')
+                        showCustomAlert('Error exporting data')
                     })
             }
 
@@ -145,14 +150,14 @@
                         const url = window.URL.createObjectURL(blob)
                         const a = document.createElement('a')
                         a.href = url
-                        a.download = 'Drug_Index_All.xlsx'
+                        a.download = 'Drug_Index.xlsx'
                         document.body.appendChild(a)
                         a.click()
                         a.remove()
                     })
                     .catch((error) => {
                         console.error('Error:', error)
-                        alert('Error exporting data')
+                        showCustomAlert('Error exporting data')
                     })
             }
         </script>

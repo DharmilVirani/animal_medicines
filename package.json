@@ -1,10 +1,15 @@
 {
+    "name": "MedicineApp",
+    "version": "1.0.0",
+    "description": "A desktop application for managing medicine database.",
+    "main": "main.js",
+    "author": "DAV",
+    "license": "ISC",
     "dependencies": {
         "body-parser": "^1.20.2",
         "cors": "^2.8.5",
         "exceljs": "^4.4.0",
         "express": "^4.19.2",
-        "fs": "^0.0.1-security",
         "jsonwebtoken": "^9.0.2",
         "jwt-decode": "^4.0.0",
         "mammoth": "^1.8.0",
@@ -12,16 +17,44 @@
         "nodemon": "^3.1.4",
         "path": "^0.12.7",
         "sqlite3": "^5.1.7",
-        "xlsx": "^0.18.5",
-        "electron": "^15.0.0"
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "electron": "^25.0.0",
+        "electron-builder": "^25.0.5"
     },
     "scripts": {
-        "start": "electron ."
+        "start": "electron .",
+        "build": "electron-builder"
     },
-    "name": "public",
-    "version": "1.0.0",
-    "main": "main.js",
-    "author": "",
-    "license": "ISC",
-    "description": ""
+    "build": {
+        "appId": "com.example.medicine-app",
+        "productName": "MedicineApp",
+        "files": [
+            "main.js",
+            "myApp/**/*",
+            "node_modules/**/*",
+            "package.json"
+        ],
+        "extraResources": [
+            {
+                "from": "./resources/medicine.db",
+                "to": "./"
+            }
+        ],
+        "directories": {
+            "buildResources": "assets"
+        },
+        "win": {
+            "target": "nsis",
+            "icon": "./myApp/public/Icon.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": "always",
+            "include": "installer.nsh",
+            "shortcutName": "MedicineApp"
+        }
+    }
 }

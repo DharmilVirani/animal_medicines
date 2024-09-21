@@ -17,8 +17,17 @@ const setupAutocomplete = (input, suggestionsContainer, data) => {
         updateSuggestionsPosition(input, suggestionsContainer)
 
         if (value) {
-            const filteredData = data.filter((item) => item.toLowerCase().includes(value))
+            // Only match items where the first letter of the value matches the first letter of the item
+            const filteredData = data.filter((item) => item.toLowerCase().startsWith(value))
+
             if (filteredData.length > 0) {
+                const exactMatch = filteredData.find((item) => item.toLowerCase() === value)
+                // Hide the suggestions if there's an exact match
+                if (exactMatch) {
+                    suggestionsContainer.style.display = 'none'
+                    return
+                }
+
                 suggestionsContainer.style.display = 'block'
                 filteredData.forEach((item) => {
                     const suggestion = document.createElement('div')
@@ -30,6 +39,8 @@ const setupAutocomplete = (input, suggestionsContainer, data) => {
                     })
                     suggestionsContainer.appendChild(suggestion)
                 })
+            } else {
+                suggestionsContainer.style.display = 'none'
             }
         } else {
             suggestionsContainer.style.display = 'none'
@@ -92,7 +103,7 @@ const setupDeleteWord = (deleteButton, input, suggestionsContainer) => {
 
         const fileName = input.value.trim()
         if (!fileName) {
-            alert('Please enter a file name.')
+            showCustomAlert('Please enter a file name.')
             return
         }
 
@@ -106,10 +117,10 @@ const setupDeleteWord = (deleteButton, input, suggestionsContainer) => {
                 return response.json()
             })
             .then((data) => {
-                alert(data.message)
+                showCustomAlert(data.message)
             })
             .catch((error) => {
-                alert(`${fileName} does not exist`)
+                showCustomAlert(`${fileName} does not exist`)
             })
         input.value = ''
     })
@@ -133,9 +144,3 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDeleteWord(deleteButton, nameInput, nameSuggestionsContainer)
     }
 })
-
-const reload = () => {
-    setTimeout(() => {
-        window.location.reload()
-    }, 100)
-}

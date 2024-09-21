@@ -17,11 +17,10 @@ app.use(express.json()) // Parses incoming JSON requests
 app.use(express.urlencoded({ extended: true })) // Parses URL-encoded bodies
 
 // Static file serving
-app.use(express.static(path.join(__dirname, '..', 'public')))
-
-const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data')
+const dataDir = path.join(__dirname, '..', '..', 'resources')
 const upload = multer({ dest: dataDir })
 const dbPath = path.join(dataDir, 'medicine.db')
+console.log('Database Path:', dbPath)
 
 // Check if data directory exists, otherwise log and create it
 if (!fs.existsSync(dataDir)) {
@@ -39,7 +38,6 @@ if (!fs.existsSync(dbPath)) {
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
 })
-
 // CORS configuration for specific origins
 const allowedOrigins = ['http://localhost:3000']
 app.use(
@@ -149,38 +147,33 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
                 if (!Name) {
                     console.error('Name is required but missing in row:', row)
-                    reject('Name is required')
-                    return
+                    return reject('Name is required')
                 }
 
-                // Check if the row already exists
                 db.get(
                     `SELECT 1 FROM drugs WHERE name = ? AND species = ? AND dose = ? AND remarks = ?`,
                     [Name, Species, Dose, Remarks],
                     (err, existingRow) => {
                         if (err) {
                             console.error('Error checking for existing entry:', err)
-                            reject('Error checking for existing entry')
-                            return
+                            return reject('Error checking for existing entry')
                         }
 
                         if (existingRow) {
-                            resolve()
-                        } else {
-                            db.run(
-                                `INSERT INTO drugs (name, species, dose, remarks)
-                                 VALUES (?, ?, ?, ?)`,
-                                [Name, Species, Dose, Remarks],
-                                function (err) {
-                                    if (err) {
-                                        console.error('Error inserting drug entry:', err)
-                                        reject('Error inserting drug entry')
-                                    } else {
-                                        resolve()
-                                    }
-                                }
-                            )
+                            return resolve()
                         }
+
+                        db.run(
+                            `INSERT INTO drugs (name, species, dose, remarks) VALUES (?, ?, ?, ?)`,
+                            [Name, Species, Dose, Remarks],
+                            function (err) {
+                                if (err) {
+                                    console.error('Error inserting drug entry:', err)
+                                    return reject('Error inserting drug entry')
+                                }
+                                resolve()
+                            }
+                        )
                     }
                 )
             })
@@ -193,14 +186,15 @@ app.post('/upload', upload.single('file'), (req, res) => {
                         console.error('Error deleting the uploaded file:', err)
                     }
                 })
+                res.json({ message: 'Dosage Data Uploaded Successfully.' })
             })
             .catch((error) => {
                 console.error('Error during data insertion:', error)
-                res.status(500).json({ message: 'Error during data insertion' })
+                res.status(500).json({ message: 'Error during data insertion', error: error.message })
             })
     } catch (error) {
         console.error('Error processing the Excel file:', error)
-        res.status(500).json({ message: 'Error processing the Excel file' })
+        res.status(500).json({ message: 'Error processing the Excel file', error: error.message })
     }
 })
 
@@ -330,7 +324,7 @@ app.delete('/medicine/:id', (req, res) => {
                             }
 
                             res.status(200).json({
-                                message: `Drug entry with ID ${id} deleted.`,
+                                message: `Drug entry deleted.`,
                             })
                         })
                     }
@@ -461,7 +455,7 @@ app.post('/upload-html', upload.array('files'), (req, res) => {
                                 if (err) {
                                     return reject('Error updating data')
                                 }
-                                resolve(`HTML file ${fileName} updated in database.`)
+                                resolve(`File ${fileName} updated in database.`)
                                 fs.unlink(filePath, (err) => {
                                     if (err) {
                                         console.error('Error deleting the uploaded file:', err)
@@ -478,7 +472,7 @@ app.post('/upload-html', upload.array('files'), (req, res) => {
                                     console.error('Error inserting file into database:', err)
                                     return reject('Error inserting file into database')
                                 }
-                                resolve(`HTML file ${fileName} uploaded and inserted into the database`)
+                                resolve(`File ${fileName} uploaded.`)
                                 fs.unlink(filePath, (err) => {
                                     if (err) {
                                         console.error('Error deleting the uploaded file:', err)
@@ -526,16 +520,14 @@ app.delete('/pharmacology-delete/:filename', (req, res) => {
         db.get('SELECT id FROM pharmacology WHERE file_name = ?', [fileName], (err, row) => {
             if (err) {
                 db.run('ROLLBACK')
-                console.error(`Error finding ${fileName} file in pharmacology table: `, err)
-                return res
-                    .status(500)
-                    .json({ message: `Error finding ${fileName} file in pharmacology table: ${err.message}` })
+                console.error(`Error finding ${fileName} file.: `, err)
+                return res.status(500).json({ message: `Error finding ${fileName} file: ${err.message}` })
             }
 
             if (!row) {
                 db.run('ROLLBACK')
                 console.error(`File ${fileName} not found in pharmacology table`)
-                return res.status(404).json({ message: `File ${fileName} not found in pharmacology table` })
+                return res.status(404).json({ message: `File ${fileName} not found.` })
             }
 
             const id = row.id
@@ -543,10 +535,8 @@ app.delete('/pharmacology-delete/:filename', (req, res) => {
             db.run('DELETE FROM pharmacology WHERE file_name = ?', [fileName], (err) => {
                 if (err) {
                     db.run('ROLLBACK')
-                    console.error(`Error deleting ${fileName} file from pharmacology table: `, err)
-                    return res
-                        .status(500)
-                        .json({ message: `Error deleting ${fileName} file from pharmacology table: ${err.message}` })
+                    console.error(`Error deleting ${fileName} file: `, err)
+                    return res.status(500).json({ message: `Error deleting ${fileName} file: ${err.message}` })
                 }
 
                 db.run('UPDATE pharmacology SET id = id - 1 WHERE id > ?', [id], (err) => {
@@ -601,4 +591,14 @@ app.get('/drugs-namespecies', (req, res) => {
 // Start the server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`)
+})
+
+process.on('SIGTERM', () => {
+    console.log('Server shutting down...')
+    process.exit(0)
+})
+
+process.on('SIGINT', () => {
+    console.log('Server shutting down...')
+    process.exit(0)
 })
