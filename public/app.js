@@ -17,7 +17,7 @@ app.use(express.json()) // Parses incoming JSON requests
 app.use(express.urlencoded({ extended: true })) // Parses URL-encoded bodies
 
 // Static file serving
-const dataDir = path.join(__dirname, '..', '..', 'resources')
+const dataDir = path.join(__dirname, 'resources')
 const upload = multer({ dest: dataDir })
 const dbPath = path.join(dataDir, 'medicine.db')
 console.log('Database Path:', dbPath)
@@ -36,10 +36,10 @@ if (!fs.existsSync(dbPath)) {
 
 // Route for the main index page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
+    res.sendFile(path.join(__dirname, '..', '..', 'index.html'))
 })
 // CORS configuration for specific origins
-const allowedOrigins = ['http://localhost:3000']
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:5500']
 app.use(
     cors({
         origin: (origin, callback) => {
