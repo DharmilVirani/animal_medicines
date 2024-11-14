@@ -1,4 +1,5 @@
 // Medicine Dosage Database
+const { app } = require('electron')
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const multer = require('multer')
@@ -9,16 +10,19 @@ const cors = require('cors')
 const excelJS = require('exceljs')
 const fs = require('fs')
 const path = require('path')
-const app = express()
+const expressApp = express()
 const port = 3000
 
 // Simplified body-parser usage
-app.use(express.json()) // Parses incoming JSON requests
-app.use(express.urlencoded({ extended: true })) // Parses URL-encoded bodies
+expressApp.use(express.json()) // Parses incoming JSON requests
+expressApp.use(express.urlencoded({ extended: true })) // Parses URL-encoded bodies
 
 // Static file serving
-const dataDir = path.join(__dirname, 'resources')
-const upload = multer({ dest: dataDir })
+const isPackaged = app.isPackaged
+const dataDir = isPackaged
+    ? path.join(process.resourcesPath, 'resources') // For packaged apps
+    : path.join(__dirname, 'resources') // For development mode
+
 const dbPath = path.join(dataDir, 'medicine.db')
 console.log('Database Path:', dbPath)
 
@@ -27,20 +31,49 @@ if (!fs.existsSync(dataDir)) {
     console.error('Data directory does not exist, creating it...')
     fs.mkdirSync(dataDir)
 }
+const upload = multer({ dest: dataDir })
 
-// Check if the database file exists
-if (!fs.existsSync(dbPath)) {
-    console.error('Database file does not exist, exiting...')
-    process.exit(1)
+function initializeDatabase() {
+    const db = new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+            console.error('Could not connect to database medicines', err)
+        } else {
+            console.log('Connected to database medicines')
+        }
+    })
+
+    // Create the drugs table if it does not exist
+    db.serialize(() => {
+        db.run(
+            `
+            CREATE TABLE IF NOT EXISTS drugs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                species TEXT NOT NULL,
+                dose TEXT NOT NULL,
+                remarks TEXT NOT NULL
+            )
+        `,
+            (err) => {
+                if (err) {
+                    console.error('Could not create table drugs', err)
+                } else {
+                    console.log('Table drugs created successfully')
+                }
+            }
+        )
+    })
+
+    return db
 }
 
 // Route for the main index page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', '..', 'index.html'))
+expressApp.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'))
 })
 // CORS configuration for specific origins
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:5500']
-app.use(
+const allowedOrigins = ['http://localhost:3000']
+expressApp.use(
     cors({
         origin: (origin, callback) => {
             if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -52,43 +85,15 @@ app.use(
     })
 )
 
-// Create a new SQLite database connection
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Could not connect to database medicines', err)
-    } else {
-        console.log('Connected to database medicines')
-    }
-})
-
-// Create the drugs table if it does not exist
-db.serialize(() => {
-    db.run(
-        `
-        CREATE TABLE IF NOT EXISTS drugs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            species TEXT NOT NULL,
-            dose TEXT NOT NULL,
-            remarks TEXT NOT NULL
-        )
-    `,
-        (err) => {
-            if (err) {
-                console.error('Could not create table drugs', err)
-            } else {
-                console.log('Table drugs created successfully')
-            }
-        }
-    )
-})
+// Initialize the database
+const db = initializeDatabase()
 
 // Middleware to parse incoming JSON and URL-encoded form data
-app.use(express.urlencoded({ extended: true }))
-app.use(express.json())
+expressApp.use(express.urlencoded({ extended: true }))
+expressApp.use(express.json())
 
 // Route to insert a new drug entry
-app.post('/medicine', (req, res) => {
+expressApp.post('/medicine', (req, res) => {
     const { name, species, dose, remarks } = req.body
 
     // Check if the dosage already exists
@@ -132,7 +137,7 @@ app.post('/medicine', (req, res) => {
 })
 
 // Import Excel file and insert data
-app.post('/upload', upload.single('file'), (req, res) => {
+expressApp.post('/upload', upload.single('file'), (req, res) => {
     const filePath = req.file.path
 
     try {
@@ -199,7 +204,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
 })
 
 // Export data to Excel file
-app.get('/export', (req, res) => {
+expressApp.get('/export', (req, res) => {
     const { name, species } = req.query
 
     let query = 'SELECT * FROM drugs'
@@ -243,7 +248,7 @@ app.get('/export', (req, res) => {
     })
 })
 
-app.get('/exportAll', async (req, res) => {
+expressApp.get('/exportAll', async (req, res) => {
     try {
         // Create a new workbook and worksheet
         const workbook = new excelJS.Workbook()
@@ -284,7 +289,7 @@ app.get('/exportAll', async (req, res) => {
 })
 
 // Route to delete a drug entry by ID and decrement subsequent IDs
-app.delete('/medicine/:id', (req, res) => {
+expressApp.delete('/medicine/:id', (req, res) => {
     const id = parseInt(req.params.id)
 
     db.serialize(() => {
@@ -335,7 +340,7 @@ app.delete('/medicine/:id', (req, res) => {
 })
 
 // Route to get all drug entries
-app.get('/medicine', (req, res) => {
+expressApp.get('/medicine', (req, res) => {
     const { name, species } = req.query
     const query = 'SELECT * FROM drugs WHERE name = ? AND species = ? ORDER by id'
     db.all(query, [name, species], (err, rows) => {
@@ -385,7 +390,7 @@ const refreshTokenMiddleware = (req, res, next) => {
     }
 }
 
-app.post('/login', (req, res) => {
+expressApp.post('/login', (req, res) => {
     const { username, password } = req.body
 
     if (username === 'Anil Virani' && password === 'ranjan@1974') {
@@ -397,9 +402,9 @@ app.post('/login', (req, res) => {
 })
 
 // Use the refresh token middleware for all protected routes
-app.use('/protected', refreshTokenMiddleware)
+expressApp.use('/protected', refreshTokenMiddleware)
 
-app.get('/protected/resource', (req, res) => {
+expressApp.get('/protected/resource', (req, res) => {
     res.send('This is a protected resource.')
 })
 
@@ -424,7 +429,7 @@ db.serialize(() => {
 })
 
 // Upload HTML
-app.post('/upload-html', upload.array('files'), (req, res) => {
+expressApp.post('/upload-html', upload.array('files'), (req, res) => {
     const files = req.files
 
     if (!files || files.length === 0) {
@@ -492,7 +497,7 @@ app.post('/upload-html', upload.array('files'), (req, res) => {
 })
 
 //Display HTML
-app.get('/pharmacology/:fileName', (req, res) => {
+expressApp.get('/pharmacology/:fileName', (req, res) => {
     const fileName = req.params.fileName
 
     db.get('SELECT file_content FROM pharmacology WHERE file_name = ?', [fileName], (err, row) => {
@@ -511,7 +516,7 @@ app.get('/pharmacology/:fileName', (req, res) => {
     })
 })
 
-app.delete('/pharmacology-delete/:filename', (req, res) => {
+expressApp.delete('/pharmacology-delete/:filename', (req, res) => {
     const fileName = req.params.filename
 
     db.serialize(() => {
@@ -564,7 +569,7 @@ app.delete('/pharmacology-delete/:filename', (req, res) => {
 })
 
 //Get all file-names from pharmacology table
-app.get('/pharmacology-getFilenames', (req, res) => {
+expressApp.get('/pharmacology-getFilenames', (req, res) => {
     db.all('SELECT file_name FROM pharmacology', (err, rows) => {
         if (err) {
             res.status(500).json({ error: err.message })
@@ -576,7 +581,7 @@ app.get('/pharmacology-getFilenames', (req, res) => {
 })
 
 //Get name and species from drugs table
-app.get('/drugs-namespecies', (req, res) => {
+expressApp.get('/drugs-namespecies', (req, res) => {
     db.all('SELECT name, species FROM drugs', (err, rows) => {
         if (err) {
             res.status(500).json({ error: err.message })
@@ -589,16 +594,18 @@ app.get('/drugs-namespecies', (req, res) => {
 })
 
 // Start the server
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`)
-})
+// expressApp.listen(port, () => {
+//     console.log(`Server is running on http://localhost:${port}`)
+// })
 
-process.on('SIGTERM', () => {
-    console.log('Server shutting down...')
-    process.exit(0)
-})
+// process.on('SIGTERM', () => {
+//     console.log('Server shutting down...')
+//     process.exit(0)
+// })
 
-process.on('SIGINT', () => {
-    console.log('Server shutting down...')
-    process.exit(0)
-})
+// process.on('SIGINT', () => {
+//     console.log('Server shutting down...')
+//     process.exit(0)
+// })
+
+module.exports = expressApp

@@ -1,57 +1,61 @@
 {
-    "name": "MedicineApp",
+    "name": "medicineapp",
     "version": "1.0.0",
-    "description": "A desktop application for managing medicine database.",
-    "main": "app.js",
-    "author": "Dharmil Virani",
+    "main": "index.js",
+    "scripts": {
+        "start": "electron .",
+        "pack": "electron-builder --dir",
+        "dist": "electron-builder"
+    },
+    "author": "",
     "license": "ISC",
+    "description": "",
     "dependencies": {
-        "body-parser": "^1.20.2",
+        "body-parser": "^1.20.3",
         "cors": "^2.8.5",
         "exceljs": "^4.4.0",
-        "express": "^4.19.2",
+        "express": "^4.21.1",
+        "fs": "^0.0.1-security",
         "jsonwebtoken": "^9.0.2",
-        "jwt-decode": "^4.0.0",
-        "mammoth": "^1.8.0",
         "multer": "^1.4.5-lts.1",
-        "nodemon": "^3.1.4",
         "path": "^0.12.7",
         "sqlite3": "^5.1.7",
         "xlsx": "^0.18.5"
     },
     "devDependencies": {
-        "electron": "^25.0.0",
-        "electron-builder": "^25.0.5"
+        "electron": "^33.2.0",
+        "electron-builder": "^25.1.8"
     },
     "build": {
-        "appId": "com.example.medicine-app",
-        "productName": "MedicineApp",
+        "appId": "com.medicineapp",
+        "productName": "Dr. Anil Virani's Drug Index",
+        "directories": {
+            "output": "dist"
+        },
         "files": [
-            "main.js",
-            "myApp/public/**/*",
-            "myApp/public/app.js",
-            "node_modules/**/*",
-            "package.json"
+            "index.js",
+            "app.js",
+            "package.json",
+            "index.html",
+            "resources/**/*",
+            "public/**/*"
         ],
         "extraResources": [
             {
-                "from": "./resources/medicine.db",
-                "to": "./"
+                "from": "resources/",
+                "to": "resources/",
+                "filter": [
+                    "**/*"
+                ]
             }
         ],
-        "directories": {
-            "buildResources": "assets"
-        },
         "win": {
             "target": "nsis",
-            "icon": "./myApp/public/Icon.ico"
+            "icon": "./public/icon.ico"
         },
-        "nsis": {
-            "oneClick": false,
-            "allowToChangeInstallationDirectory": true,
-            "createDesktopShortcut": "always",
-            "include": "installer.nsh",
-            "shortcutName": "MedicineApp"
+        "mac": {
+            "target": "dmg",
+            "icon": "./public/icon.icns"
         }
     }
 }
